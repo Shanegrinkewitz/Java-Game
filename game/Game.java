@@ -1,9 +1,6 @@
 package game;
 
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.Graphics;
+import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.util.ArrayList;
@@ -16,6 +13,8 @@ public class Game extends JPanel implements KeyListener, Runnable {
 	
 	private final int WIDTH = 640;
 	private final int HEIGHT = 320;
+
+	private static final double TARGET_FPS = 60.0;
 	
 	private Thread gameThread;
 	private boolean running = true;
@@ -72,6 +71,7 @@ public class Game extends JPanel implements KeyListener, Runnable {
 	
 	private void startGameLoop() {
 		while (running) {
+			long beforeUpdate = System.currentTimeMillis();
 			if (spaceBarDown) {
 				player.shoot();
 			}
@@ -88,8 +88,11 @@ public class Game extends JPanel implements KeyListener, Runnable {
 			update();
 			repaint();
 			checkCollisions();
+			long afterUpdate = System.currentTimeMillis() - beforeUpdate;
+			System.out.println("after: " + afterUpdate);
+			long delay = (long) (1000 / TARGET_FPS - afterUpdate);
 			try {
-				Thread.sleep(20);
+				Thread.sleep(delay);
 			}catch (InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -143,33 +146,34 @@ public class Game extends JPanel implements KeyListener, Runnable {
 	
 	public void paintComponent(Graphics g) {
 		super.paintComponent(g);
+		Graphics2D g2 = (Graphics2D) g;
 		
 		if (!running) {
-			g.setColor(Color.BLACK);
-			g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 32));
-			g.drawString("Game Over", 250, getHeight() / 2 - 50);
-			g.drawString("Score: " + score, 250, getHeight() / 2);
+			g2.setColor(Color.BLACK);
+			g2.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 32));
+			g2.drawString("Game Over", getWidth() / 2 - 75, getHeight() / 2 - 50);
+			g2.drawString("Score: " + score, getWidth() / 2 - 75, getHeight() / 2);
 			return;
 		}
 		
 		if (player == null) return;
 		
-		player.draw(g);
+		player.draw(g2);
 		ArrayList<Bullet> bulletListClone = new ArrayList<Bullet>(bullets);
 		for (Bullet bullet : bulletListClone) {
-			bullet.draw(g);
+			bullet.draw(g2);
 		}
 		ArrayList<Enemy> enemyListClone = new ArrayList<Enemy>(enemies);
 		for (Enemy enemy : enemyListClone) {
-			enemy.draw(g);
+			enemy.draw(g2);
 		}
-		drawScore(g);
+		drawScore(g2);
 	}
 	
 	private void drawScore(Graphics g) {
 		g.setColor(Color.BLACK);
 		g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 16));
-		g.drawString("Score: " + score, 300, 20);
+		g.drawString("Score: " + score, getWidth() / 2 - 25, 20);
 	}
 
 	public void keyPressed(KeyEvent e) {
@@ -203,13 +207,12 @@ public class Game extends JPanel implements KeyListener, Runnable {
 			while (running) {
 				try {
 					Thread.sleep(random.nextInt(2001) + 500);
-				}catch (InterruptedException e) {
+				} catch (InterruptedException e) {
 					System.out.println("interrupted");
 					break;
 				}
 				enemyCreated = true;
 			}
-			System.out.println("ended");
 		}
 	}	
 }
